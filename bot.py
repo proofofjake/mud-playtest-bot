@@ -1,11 +1,25 @@
 import discord
 import os
-from discord.ext import commands,tasks
+import requests
 import logging
+from datetime import datetime, timezone
+from discord.ext import commands,tasks
 
 
 
-TOKEN = os.getenv('DISCORD_TOKEN')
+
+DTOKEN = os.getenv('DISCORD_TOKEN')
+NTOKEN = os.getenv('NOTION_TOKEN')
+
+DATABASE_ID = ''
+
+headers = {
+    "Authorization": "Bearer " + NTOKEN,
+    "Content-Type": "application/json",
+    "Notion-Version": "2022-06-28",
+    }
+
+
 
 handler = logging.FileHandler(filename='./discord.log', encoding='utf-8', mode='w')
 intents = discord.Intents.default()
@@ -58,12 +72,25 @@ async def myLoop():
 
 
 
+def create_event(data: dict):
+    create_url = "https://api.notion.com/v1/pages"
+
+    payload = {"parent": {"database_id": DATABASE_ID}, "properties": data}
+
+    res = requests.post(create_url, headers=headers, json=payload)
+    print(res.status_code)
+    return res
 
 
+def event_setup(title,description):
+    published_date = datetime.now().astimezone(timezone.utc).isoformat()
+    data = {
+        "URL": {"title": [{"text": {"content": description}}]},
+        "Title": {"rich_text": [{"text": {"content": title}}]},
+        "Published": {"date": {"start": published_date, "end": None}}
+    }
+    create_event(data)
 
 
-
-
-
-print(TOKEN)
-bot.run(TOKEN,log_handler=handler)
+print(DTOKEN)
+bot.run(DTOKEN,log_handler=handler)
