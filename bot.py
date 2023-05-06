@@ -65,7 +65,5 @@ async def myLoop():
 
 
 
-TOKEN = 'MTEwNDE4NjQyODAwODY5Nzg1Ng.GazlL9.pL4aKoVGpoPKUzfxZ4MhgyLBsiF8nJJLj5ZZg8'
-
 print(TOKEN)
 bot.run(TOKEN,log_handler=handler)
