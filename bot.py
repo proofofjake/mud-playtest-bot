@@ -22,7 +22,9 @@ headers = {
 
 # a dict 
 servers = dict()
-# (guild id, notionpage) , string
+# (guild id, notionpageid) , string
+events = dict()
+# (date_time,title,projectid) , string
 
 # File path for storing the servers dictionary
 SERVERS_FILE = 'servers.pkl'
@@ -33,6 +35,7 @@ if os.path.isfile(SERVERS_FILE):
         servers = pickle.load(file)
 else:
     servers = {}
+
 
 # discord bot settings, setting up the logging, & intents, NEEDS TO CHECK WHICH ARE NEEDED
 handler = logging.FileHandler(filename='./discord.log', encoding='utf-8', mode='w')
@@ -95,7 +98,7 @@ async def start(ctx,arg1):
 
 
 @bot.command()
-async def stop(ctx,arg1): # update to allow !stop [id]
+async def stop(ctx,arg1): # update to allow !stop [id] 
     # remove this ctx.message.guild from the systems
     #                            [aka from the hot struct and logging] 
     await ctx.message.reply(content = "Removing your server from the bot...")
@@ -112,16 +115,22 @@ async def myLoop():
     for server in servers:
         # print (server)
         guildx = bot.get_guild(server[0])
-        events = await guildx.fetch_scheduled_events()
-        for event in events:
-            print(event)
-            print(event.location)
-            print(event.name)
-            event_setup(str(event.start_time.astimezone(timezone.utc).isoformat()),server[1],event.location,event.name)
+        tempevents = await guildx.fetch_scheduled_events()
+        for event in tempevents:
+            # print(event)
+            # print(event.location)
+            # print(event.name)
+            event_setup(event.start_time.astimezone(timezone.utc).isoformat(),server[1],event.location,event.name)
+            # print()
     
     # Save servers to file
     with open(SERVERS_FILE, 'wb') as file:
         pickle.dump(servers, file)
+
+    update_events(get_pages())
+
+
+    
     print("tock")
 
 
@@ -145,20 +154,18 @@ async def myLoop():
 
 
 def create_event(data: dict):
+    print("creating event!")
     create_url = "https://api.notion.com/v1/pages"
 
     payload = {"parent": {"database_id": DATABASE_ID}, "properties": data}
 
     res = requests.post(create_url, headers=headers, json=payload)
-    print(res.status_code)
+    # print(res.status_code)
     # print(res.content) # uncomment for diaognostic
     return res
 
-
 def event_setup(date_time,projectid,url,title):
-    print(date_time)
-
-    if event_exists(str(date_time), title, url):
+    if check_event_exists(date_time, title): #,projectid):
         print("Event already exists in the Notion calendar.")
         return
     
@@ -184,7 +191,7 @@ def get_pages(num_pages=None):
     response = requests.post(url, json=payload, headers=headers)
 
     data = response.json()
-
+    return data
     # Comment this out to dump all data to a file
     # import json
     # with open('db.json', 'w', encoding='utf8') as f:
@@ -200,46 +207,23 @@ def get_pages(num_pages=None):
 
     return results
 
-def event_exists(date_time, title, url):
-    """
-    Checks if an event with the given date and time, title, and URL already exists in the Notion calendar.
-    """
-    url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+def check_event_exists(date_time, title): # , projectid):
+    print('checking if exists.... ')
+    date_time_parts = date_time.split("+")
+    date_time = date_time_parts[0] + ".000+" + date_time_parts[1]   
+    event_tuple = (str(date_time),title)#,projectid)
+    return event_tuple in events
 
-    payload = {
-        "filter": {
-            "and": [
-                {
-                    "property": "Date & Time",
-                        "date": [{'start': date_time}]
-                },
-                {
-                    "property": "Title",
-                    "title": [
-                        {
-                            "text": {
-                                "equals": title
-                            }
-                        }
-                    ]
-                },
-                {
-                    "property": "URL",
-                    "url": {
-                        "equals": url
-                    }
-                }
-            ]
-        }
-    }
+def update_events(pages):
+    events_temp = pages['results']
+    for event in events_temp:
+        date_time = event['properties']['Date & Time']['date']['start']
+        title = event['properties']['Title']['title'][0]['text']['content']
+        # projectid = event['properties']['Game/Team']['rich_text'][0]['mention']['page']['id']
 
-    response = requests.post(url, json=payload, headers=headers)
-    data = response.json()
-    print(data)
+        event_tuple = (date_time,title) # ,projectid)
 
-    return len(data.get("results", [])) > 0
-
-
+        events.update({event_tuple : True})
 
 # print(DTOKEN)
 bot.run(DTOKEN,log_handler=handler)
