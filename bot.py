@@ -25,6 +25,11 @@ servers = dict()
 # (guild id, notionpageid) , string
 events = dict()
 # (date_time,title,projectid) , string
+serversTBD = dict()
+# events to be deleted
+
+server_lock = False
+# True is active
 
 # File path for storing the servers dictionary
 SERVERS_FILE = 'servers.pkl'
@@ -102,15 +107,16 @@ async def stop(ctx,arg1): # update to allow !stop [id]
     # remove this ctx.message.guild from the systems
     #                            [aka from the hot struct and logging] 
     await ctx.message.reply(content = "Removing your server from the bot...")
-    entry = (ctx.message.guild.id,str(arg1))
-    servers.pop(entry)
-    await ctx.message.reply(content = "Removed!")
+    entry = {(ctx.message.guild.id,str(arg1)):ctx.message.channel}
+    print(entry)
+    print(servers)
+    serversTBD.update(entry)
 
 
 @tasks.loop(seconds = 10) # repeat after every x seconds
 async def myLoop():
     print('tick')
-    # print(servers)
+    print(servers)
     # activeServers = servers
     for server in servers:
         # print (server)
@@ -127,10 +133,10 @@ async def myLoop():
     with open(SERVERS_FILE, 'wb') as file:
         pickle.dump(servers, file)
 
+
+    check_deleted_servers()
     update_events(get_pages())
 
-
-    
     print("tock")
 
 
@@ -150,7 +156,13 @@ async def myLoop():
     
 
 
-
+def check_deleted_servers():
+    if len(serversTBD) == 0:
+        return
+    else:
+        for server in serversTBD:
+            servers.pop(server)
+            print(server[0])
 
 
 def create_event(data: dict):
