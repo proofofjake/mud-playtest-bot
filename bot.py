@@ -11,7 +11,8 @@ DTOKEN = os.getenv('DISCORD_TOKEN')
 NTOKEN = os.getenv('NOTION_TOKEN')
 
 # notion database id
-DATABASE_ID = 'c0d85c444c84423aa78eb50b94410083'
+DATABASE_ID_OLD = 'c0d85c444c84423aa78eb50b94410083'
+DATABASE_ID = '8ba759f42ab44f42adfa77677caea15a'
 
 # headers for the notion connection
 headers = {
@@ -237,5 +238,5 @@ def update_events(pages):
 
         events.update({event_tuple : True})
 
-# print(DTOKEN)
+print(DTOKEN)
 bot.run(DTOKEN,log_handler=handler)
