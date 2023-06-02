@@ -56,32 +56,6 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 async def on_ready():
     print(f'{bot.user} is now online')
     myLoop.start()
-    # pages = get_pages()
-
-    # for page in pages:
-        # print(page)
-        # page_id = page["id"]
-        # props = page["properties"]
-        # print(page_id)
-        # print (props)
-        # url = props["URL"]["title"][0]["text"]["content"]
-        # title = props["Title"]["rich_text"][0]["text"]["content"]
-        # published = props["Published"]["date"]["start"]
-        # published = datetime.fromisoformat(published)
-        # print("________________________")
-
-        # print(url)
-        # print(title)
-        # print(published)
-        
-
-    #takenGuild = bot.get_guild(960593893970280468)
-    #print(takenGuild.id)
-
-    #for guild in bot.guilds:
-    #    print(guild)
-    #    print(guild.id)
-    #myLoop.start()
     
 
 @bot.command(pass_context=True)
@@ -92,11 +66,6 @@ async def start(ctx,arg1):
     testSt = 'lmeow'
     entry = (int(guildid),str(arg1))
     servers.update({entry : testSt})
-    # entry = ({961593893972340468:'9fda8eb2baa94a7bab8b784a7968e574'})
-    # servers.update(entry)z
-    # servers.update(entry)
-    # replace these with ctx.message.guild 
-    # print()
     await ctx.message.reply(content = "Starting the bot...")
    
     
@@ -140,20 +109,6 @@ async def myLoop():
 
     print("tock")
 
-
-
-
-
-
-    # guildx = bot.get_guild(960593893970280468)
-    
-    # events = []
-    # events = await guildx.fetch_scheduled_events(True)
-    # events = await guildx.fetch_scheduled_events()
-    
-    # print(events)
-    # for event in events:
-    #    print(event)
     
 
 
@@ -205,20 +160,7 @@ def get_pages(num_pages=None):
 
     data = response.json()
     return data
-    # Comment this out to dump all data to a file
-    # import json
-    # with open('db.json', 'w', encoding='utf8') as f:
-    #    json.dump(data, f, ensure_ascii=False, indent=4)
-    # print(data)
-    results = data["results"]
-    while data["has_more"] and get_all:
-        payload = {"page_size": page_size, "start_cursor": data["next_cursor"]}
-        url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
-        response = requests.post(url, json=payload, headers=headers)
-        data = response.json()
-        results.extend(data["results"])
 
-    return results
 
 def check_event_exists(date_time, title): # , projectid):
     print('checking if exists.... ')
